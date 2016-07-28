@@ -1,17 +1,25 @@
 ﻿using System;
+using System.Linq;
+using System.Threading;
+using ManagedBass.Mix;
 
 namespace ManagedBass
 {
     public class HChannel : H
     {
-        protected HChannel(int Handle) : base(Handle) { }
+        readonly SynchronizationContext _syncContext;
+
+        protected HChannel(int Handle) : base(Handle)
+        {
+            _syncContext = SynchronizationContext.Current;
+        }
 
         public int Device
         {
             get { return Bass.ChannelGetDevice(this); }
             set { Bass.ChannelSetDevice(this, value); }
         }
-
+        
         public ChannelInfo Info => Bass.ChannelGetInfo(this);
         public int Level => Bass.ChannelGetLevel(this);
         public int LevelLeft => Bass.ChannelGetLevelLeft(this);
@@ -113,9 +121,9 @@ namespace ManagedBass
             return Bass.ChannelSetAttribute(this, Attribute, Value, Size);
         }
 
-        public int SetDSP(DSPProcedure Procedure, IntPtr User = default(IntPtr), int Priority = 0)
+        public int SetDSP(DSPProcedure Procedure, int Priority = 0)
         {
-            return Bass.ChannelSetDSP(this, Procedure, User, Priority);
+            return Bass.ChannelSetDSP(this, Procedure, IntPtr.Zero, Priority);
         }
 
         public HFX SetFX(EffectType Type, int Priority = 0)
@@ -130,9 +138,9 @@ namespace ManagedBass
             return Bass.ChannelSetPosition(this, Position, Mode);
         }
 
-        public int SetSync(SyncFlags Type, long Parameter, SyncProcedure Procedure, IntPtr User = default(IntPtr))
+        public int SetSync(SyncFlags Type, long Parameter, SyncProcedure Procedure)
         {
-            return Bass.ChannelSetSync(this, Type, Parameter, Procedure, User);
+            return Bass.ChannelSetSync(this, Type, Parameter, Procedure, IntPtr.Zero);
         }
 
         public bool SlideAttribute(ChannelAttribute Attribute, double Value, int Time)
@@ -144,6 +152,7 @@ namespace ManagedBass
 
         public bool Update(int Length) => Bass.ChannelUpdate(this, Length);
 
+        #region Channel Attributes
         public double CPUUsage => GetAttribute(ChannelAttribute.CPUUsage);
 
         public double Frequency
@@ -163,5 +172,84 @@ namespace ManagedBass
             get { return GetAttribute(ChannelAttribute.Volume); }
             set { SetAttribute(ChannelAttribute.Volume, value); }
         }
+        #endregion
+
+        public bool Loop
+        {
+            get { return HasFlag(BassFlags.Loop); }
+            set
+            {
+                if (value)
+                    AddFlag(BassFlags.Loop);
+                else RemoveFlag(BassFlags.Loop);
+            }
+        }
+
+        public TimeSpan Duration => TimeSpan.FromSeconds(Bytes2Seconds(GetLength()));
+        
+        public TimeSpan Position
+        {
+            get { return TimeSpan.FromSeconds(Bytes2Seconds(GetPosition())); }
+            set { SetPosition(Seconds2Bytes(value.TotalSeconds)); }
+        }
+
+        public HSplit[] Splits => BassMix.SplitStreamGetSplits(this).Cast<HSplit>().ToArray();
+
+        #region Syncs
+        SyncProcedure GetSyncProcedure(Action Handler)
+        {
+            return (SyncHandle, Channel, Data, User) =>
+            {
+                if (Handler == null)
+                    return;
+
+                if (_syncContext == null)
+                    Handler();
+                else _syncContext.Post(S => Handler(), null);
+            };
+        }
+        
+        int _hEnd;
+        event EventHandler EndInternal;
+
+        public event EventHandler Ended
+        {
+            add
+            {
+                if (EndInternal == null)
+                    _hEnd = SetSync(SyncFlags.End, 0, GetSyncProcedure(() => EndInternal?.Invoke(this, EventArgs.Empty)));
+
+                EndInternal += value;
+            }
+            remove
+            {
+                EndInternal -= value;
+
+                if (EndInternal == null)
+                    RemoveSync(_hEnd);
+            }
+        }
+
+        int _hFree;
+        event EventHandler FreeInternal;
+
+        public event EventHandler Freed
+        {
+            add
+            {
+                if (FreeInternal == null)
+                    _hFree = SetSync(SyncFlags.Free, 0, GetSyncProcedure(() => FreeInternal?.Invoke(this, EventArgs.Empty)));
+
+                FreeInternal += value;
+            }
+            remove
+            {
+                FreeInternal -= value;
+
+                if (FreeInternal == value)
+                    RemoveSync(_hFree);
+            }
+        }
+        #endregion
     }
 }

@@ -28,9 +28,9 @@ namespace ManagedBass.Enc
 
         public PlaybackState IsActive => BassEnc.EncodeIsActive(this);
 
-        public bool SetNotify(EncodeNotifyProcedure Procedure, IntPtr User = default(IntPtr))
+        public bool SetNotify(EncodeNotifyProcedure Procedure)
         {
-            return BassEnc.EncodeSetNotify(this, Procedure, User);
+            return BassEnc.EncodeSetNotify(this, Procedure, IntPtr.Zero);
         }
 
         public bool SetPaused(bool Paused = true) => BassEnc.EncodeSetPaused(this, Paused);

@@ -3,13 +3,13 @@ using System.Linq;
 
 namespace ManagedBass
 {
-    public class HSample : H
+    public class HSample : H, IDisposable
     {
         HSample(int Handle) : base(Handle) { }
 
         public static implicit operator HSample(int Handle) => new HSample(Handle);
 
-        public bool Free() => Bass.SampleFree(this);
+        public void Dispose() => Bass.SampleFree(this);
 
         public HChannel GetChannel(bool OnlyNew = false) => Bass.SampleGetChannel(this, OnlyNew);
 

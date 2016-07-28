@@ -34,6 +34,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="HMix.cs" />
     <Compile Include="H.cs" />
     <Compile Include="HChannel.cs" />
     <Compile Include="HFX.cs" />
@@ -41,6 +42,7 @@
     <Compile Include="HRecord.cs" />
     <Compile Include="HEncode.cs" />
     <Compile Include="HSample.cs" />
+    <Compile Include="HSplit.cs" />
     <Compile Include="HStream.cs" />
     <Compile Include="HReverse.cs" />
     <Compile Include="HTempo.cs" />

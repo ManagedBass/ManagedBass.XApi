@@ -1,4 +1,6 @@
-﻿namespace ManagedBass
+﻿using System;
+
+namespace ManagedBass
 {
     public abstract class H
     {
@@ -6,6 +8,9 @@
 
         protected H(int Handle)
         {
+            if (Handle == 0)
+                throw new ArgumentException("Invalid Zero Handle", nameof(Handle));
+
             _handle = Handle;
         }
 

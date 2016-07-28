@@ -1,14 +1,15 @@
+using System;
 using System.Runtime.InteropServices;
 
 namespace ManagedBass
 {
-    public class HMusic : HChannel
+    public class HMusic : HChannel, IDisposable
     {
         HMusic(int Handle) : base(Handle) { }
 
         public static implicit operator HMusic(int Handle) => new HMusic(Handle);
 
-        public bool Free() => Bass.MusicFree(this);
+        public void Dispose() => Bass.MusicFree(this);
 
         public int ActiveChannelCount => (int)GetAttribute(ChannelAttribute.MusicActiveChannelCount);
 

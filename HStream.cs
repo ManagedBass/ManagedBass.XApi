@@ -1,6 +1,8 @@
+using System;
+
 namespace ManagedBass
 {
-    public class HStream : HChannel
+    public class HStream : HChannel, IDisposable
     {
         HStream(int Handle) : base(Handle) { }
 
@@ -8,6 +10,6 @@ namespace ManagedBass
 
         public double AverageBitrate => GetAttribute(ChannelAttribute.Bitrate);
 
-        public bool Free() => Bass.StreamFree(this);
+        public void Dispose() => Bass.StreamFree(this);
     }
 }
