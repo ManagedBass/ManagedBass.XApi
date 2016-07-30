@@ -79,7 +79,7 @@ namespace ManagedBass
 
         public IntPtr GetTags(TagType TagType) => Bass.ChannelGetTags(this, TagType);
 
-        public bool HasFlag(BassFlags Fllag) => Bass.ChannelHasFlag(this, Fllag);
+        public bool HasFlag(BassFlags Flag) => Bass.ChannelHasFlag(this, Flag);
 
         public bool IsSliding(ChannelAttribute Attribute) => Bass.ChannelIsSliding(this, Attribute);
 
@@ -173,7 +173,7 @@ namespace ManagedBass
             set { SetAttribute(ChannelAttribute.Volume, value); }
         }
         #endregion
-
+        
         public bool Loop
         {
             get { return HasFlag(BassFlags.Loop); }
